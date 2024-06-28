@@ -75,11 +75,13 @@ def many_models(x,y,xt,yt):
     xt_scale = scaled.transform(xt)
     
     # Random Forest Classifier model
-    rf = RandomForestClassifier(n_estimators=500)
+    rf = RandomForestClassifier()
     rf.fit(x,y)
     rf_predict = rf.predict(x)
     rf_test = rf.predict(xt)
-    print(f'Random Forest \nbalanced test score: {balanced_accuracy_score(yt,rf_test)}')
+    
+    # print scores and classification reports
+    print(f'\nRandom Forest \nTest Accuracy: {rf.score(xt,yt)}\nbalanced test score: {balanced_accuracy_score(yt,rf_test)}')
     print(f'classification report: \n {classification_report(yt,rf_test)}')
     
     # Gradient Boosting Classifier model
@@ -87,15 +89,19 @@ def many_models(x,y,xt,yt):
     gr.fit(x,y)
     gr_predict = gr.predict(x)
     gr_test = gr.predict(xt)
-    print(f'Gradient Boost \nbalanced test score: {balanced_accuracy_score(yt,gr_test)}')
+    
+    # print scores and classification reports
+    print(f'\nGradient Boost \nTest Accuracy: {gr.score(xt,yt)}\nbalanced test score: {balanced_accuracy_score(yt,gr_test)}')
     print(f'\n classification report: \n {classification_report(yt,gr_test)}')
     
     # Logistic Regression model
-    lr = LogisticRegression(max_iter=120)
+    lr = LogisticRegression(max_iter=240)
     lr.fit(x_scale,y)
     lr_predict = lr.predict(x_scale)
     lr_test = lr.predict(xt_scale)
-    print(f'Logistic Regression \nbalanced test score: {balanced_accuracy_score(yt,lr_test)}')
+    
+    # print scores and classification reports    
+    print(f'\nLogistic Regression \nTest Accuracy: {lr.score(xt_scale,yt)}\nbalanced test score: {balanced_accuracy_score(yt,lr_test)}')
     print(f'classification report: \n {classification_report(yt,lr_test)}')
     
     # Poly Support Vector Classifier model
@@ -103,7 +109,9 @@ def many_models(x,y,xt,yt):
     svc.fit(x_scale,y)
     svc_predict = svc.predict(x_scale)
     svc_test = svc.predict(xt_scale)
-    print(f'Poly Support Vector \nbalanced test score: {balanced_accuracy_score(yt,svc_test)}')
+    # print scores and classification reports
+    
+    print(f'\nPoly Support Vector \nTest Accuracy: {svc.score(xt_scale,yt)}\nBalanced test score: {balanced_accuracy_score(yt,svc_test)}')
     print(f'classification report: \n {classification_report(yt,svc_test)}')
 
     
@@ -112,14 +120,18 @@ def many_models(x,y,xt,yt):
     ada_low.fit(x_scale,y)
     ada_low_predict = ada_low.predict(x_scale)
     ada_low_test = ada_low.predict(xt_scale)
-    print(f'ADA low estimators \nbalanced test score: {balanced_accuracy_score(yt,ada_low_test)}')
+    
+    # print scores and classification reports
+    print(f'\nADA low estimators \nTest Accuracy: {ada_low.score(xt_scale,yt)}\nbalanced test score: {balanced_accuracy_score(yt,ada_low_test)}')
     print(f'classification report: \n {classification_report(yt,ada_low_test)}')
     
-    ada = AdaBoostClassifier(n_estimators=2000)    
+    ada = AdaBoostClassifier(n_estimators=1500)    
     ada.fit(x_scale,y)
     ada_predict = ada.predict(x_scale)
     ada_test = ada.predict(xt_scale)
-    print(f'ADA \nbalanced test score: {balanced_accuracy_score(yt,ada_test)}')
+    
+    # print scores and classification reports
+    print(f'\nADA \nTest Accuracy: {ada.score(xt_scale,yt)}\nbalanced test score: {balanced_accuracy_score(yt,ada_test)}')
     print(f'classification report: \n {classification_report(yt,ada_test)}')
     
     # Linear Support Vector Classifier model
@@ -128,7 +140,8 @@ def many_models(x,y,xt,yt):
     svc_sigmoid_predict = svc_sigmoid.predict(x_scale)
     svc_sigmoid_test = svc_sigmoid.predict(xt_scale)
     
-    print(f'SVC Sigmoid \nbalanced test score: {balanced_accuracy_score(yt,svc_sigmoid_test)}')
+    # print scores and classification reports
+    print(f'\nSVC Sigmoid \nTest Accuracy: {svc_sigmoid.score(xt_scale,yt)}\nbalanced test score: {balanced_accuracy_score(yt,svc_sigmoid_test)}')
     print(f'classification report: \n {classification_report(yt,svc_sigmoid_test)}')
     
     # comparison dataframe of the models
@@ -150,29 +163,227 @@ def many_models(x,y,xt,yt):
     
     # sort by difference column
     comparison = comparison.sort_values(by='Balanced Test Score', ascending=False)
-    #comparison = comparison[['Trained Score','Test Score','Difference','Balanced Test Score']]
-    comparison # type: ignore
+    comparison = comparison[['Trained Score','Test Score','Balanced Test Score','Balanced Difference']]
+    print(comparison.head(7))
     
     # plot the comparison dataframe on a bar graph for visualizations
-    comparison.plot(kind='bar').tick_params(axis='x',labelrotation=45)
+    comparison.plot(kind='bar').tick_params(axis='x',rotation=45)
+    
+    
+    
+    
+    
+    # Create checks for Random Forest Best Parameters
+    
+    
+    
+    
     
     # check best depth for random forest
     models = {'train_score': [], 'test_score': [], 'max_depth': []}
     
     # loop through range to see where deviation happens
-    for depth in range(1,15):
+    for depth in range(2,12):
+        
+        # save max depth to models
         models['max_depth'].append(depth)
-        model = RandomForestClassifier(n_estimators=500, max_depth=depth)
+        
+        # create model for max depth 
+        model = RandomForestClassifier(max_depth=depth)
+        
+        # fit the random forest model
         model.fit(x, y)
+        
+        # make max depth predictions
         y_test_pred = model.predict(xt)
         y_train_pred = model.predict(x)
+        
+        # save max depth scores to models
         models['train_score'].append(balanced_accuracy_score(y, y_train_pred))
         models['test_score'].append(balanced_accuracy_score(yt, y_test_pred))
-    models_df = pd.DataFrame(models)
+        
+    # save models data to dataframe and sort by test scores    
+    models_df = pd.DataFrame(models).sort_values(by='test_score',ascending=False)#.reset_index('max_depth')
     
     # show graph of for loop
     models_df.plot(title='Random forest max depth', x='max_depth')
-    return comparison,models_df
+    
+    #set max_depth as index
+    models_df = models_df.set_index('max_depth')
+    print(f'\nRandom Forest Parameter Tuning:\n \nbest depth: \n{models_df}')
+    
+    # save top 5 to a list
+    best_rf = models_df.head().index.tolist()
+    print(f'max depths: \n{best_rf}\n')
+    
+    
+    
+    
+    
+    
+    # test for leafs
+    leaf = range(2,12)
+    leaves = {'train_score':[],'test_score':[],'min_leaf': []}
+    
+    # loop through leaf values
+    for i in leaf:
+        
+        # create Random Forest Classifier instance with depth
+        model = RandomForestClassifier(min_samples_split=i)
+        
+        # fit model
+        model.fit(x,y)
+        
+        # predict
+        X_test_pred = model.predict(xt)
+        y_train_pred = model.predict(x)
+        
+        #store scores and best amounts in leaves dictionary
+        leaves['train_score'].append(balanced_accuracy_score(y,y_train_pred))
+        leaves['test_score'].append(balanced_accuracy_score(yt,X_test_pred))
+        leaves['min_leaf'].append(i)
+        
+    # store dictionary in a dataframe
+    leaves_df = pd.DataFrame(leaves).sort_values(by='test_score',ascending=False)
+    
+    # set leaves_df index to 'min_leaf'
+    leaves_df = leaves_df.set_index('min_leaf')
+    print(f'best leaf: \n{leaves_df.head()}')
+    
+    # plot best leaf on graph
+    leaves_df.plot(title='Random Forest Best Leaf')
+    
+    # save to list
+    best_split = leaves_df.head().index.tolist()
+    print(f'best leaf \n{best_split}\n')
+    
+    
+    
+    
+    
+    
+    
+    # test for best n_estimators
+    # create n_estimators range search
+    est = range(25,250,2)
+    
+    # create dictionary to store results
+    est_models = {'train_score':[],'test_score':[],'n_estimators':[]}
+    
+    # loop through range to find best n_estimators
+    for i in est:
+        
+        # create random forest model
+        est_model = RandomForestClassifier(n_estimators=i)
+        
+        # fit model 
+        est_model.fit(x,y)
+        
+        # make predictions for n_estimators
+        X_test_pred = est_model.predict(xt)
+        y_train_pred = est_model.predict(x)
+        
+        # store results in dictionairy
+        est_models['train_score'].append(balanced_accuracy_score(y,y_train_pred))
+        est_models['test_score'].append(balanced_accuracy_score(yt,X_test_pred))
+        est_models['n_estimators'].append(i)
+        
+    # save to dataframe
+    estimators_df = pd.DataFrame(est_models).sort_values(by='test_score',ascending=False)
+    
+    # set index to n_estimators
+    estimators_df = estimators_df.set_index('n_estimators')
+    print(f'\nbest n_estimators: \n{estimators_df.head()}')
+    
+    # plot n_estimators on graph
+    estimators_df.plot(title='best n_estimators')
+    
+    # save to list
+    best_est = estimators_df.head().index.tolist()
+    print(f'best n_estimators \n{best_est}\n')
+    
+    
+    
+    
+    
+    
+    
+    
+    # save best parameters to dictionary to use to find best combination
+    best_params = {
+        'n_estimators': best_est,
+        'max_depth': best_rf,
+        'min_samples_leaf': best_split
+    }
+    
+    # create dictionary to store results
+    best_results = {'n_estimators':[],'max_depth':[],'min_samples_leaf':[],'train_score':[],'test_score':[]}
+    
+    # loop through combinations(refactor in future for efficiency)
+    for e in best_params['n_estimators']:
+        for m in best_params['max_depth']:
+            for l in best_params['min_samples_leaf']:
+                
+                # create random forest model with best parameters
+                rf_model = RandomForestClassifier(n_estimators=e,max_depth=m,min_samples_leaf=l)
+                
+                # fit data
+                rf_model.fit(x,y)
+                
+                # predictions
+                test_pred = rf_model.predict(xt)
+                train_pred = rf_model.predict(x)
+                
+                # append balanced scores
+                best_results['train_score'].append(balanced_accuracy_score(y,train_pred))
+                best_results['test_score'].append(balanced_accuracy_score(yt,test_pred))
+                best_results['n_estimators'].append(e)
+                best_results['max_depth'].append(m)
+                best_results['min_samples_leaf'].append(l)
+                    
+    # save best results to dataframe
+    best_results_df = pd.DataFrame(best_results).sort_values(by='test_score',ascending=False)
+    best_results_df = best_results_df.set_index('test_score')
+    print(f'\nbest results:\n{best_results_df.head()}')
+    
+    # save best parameters to print
+    best_n = best_results_df['n_estimators'].iloc[0]
+    best_d = best_results_df['max_depth'].iloc[0]
+    best_l = best_results_df['min_samples_leaf'].iloc[0]
+    print(f'best n_estimators: {best_n} \nbest max_depth: {best_d} \nbest leaves: {best_l}')
+    
+    # create random forest instance with best parameters
+    tuned_rf = RandomForestClassifier(n_estimators=best_results_df['n_estimators'].iloc[0], max_depth=best_results_df['max_depth'].iloc[0], min_samples_leaf=best_results_df['min_samples_leaf'].iloc[0],random_state=13)    
+    
+    # train the tuned model
+    tuned_rf.fit(x,y)
+    
+    # predict with the tuned model
+    best_train = tuned_rf.predict(x)
+    best_test = tuned_rf.predict(xt)
+    
+    # view tuned Random Forest Model scores and classification report
+    print(f'best Random Forest Tuned Parameters scores \n')
+    print(f'\nBest Random Forest Tuned Parameters Scores \nTest Accuracy: {tuned_rf.score(xt,yt)}\nbalanced test score: {balanced_accuracy_score(yt,best_test)}')
+    print(f'classification report: \n {classification_report(yt,best_test)}')
+    
+    # add tuned Random Forest Model to the comparison DataFrame and Plot
+    best_df = pd.DataFrame(
+        [
+            ['Tuned Random Forest',tuned_rf.score(x,y),tuned_rf.score(xt,yt),balanced_accuracy_score(y,best_train),balanced_accuracy_score(yt,best_test)]
+        ],
+            columns=['Model Name','Trained Score', 'Test Score','Balanced Trained Score','Balanced Test Score']
+    ).set_index('Model Name')
+    best_df['Balanced Difference'] = (best_df['Balanced Trained Score'] - best_df['Balanced Test Score'])
+    best_df = best_df[['Trained Score','Test Score','Balanced Test Score','Balanced Difference']]
+    comparison_df = pd.concat([comparison,best_df])
+    print(f'updated comparison DataFrame \n{comparison_df.head(8)}')
+    
+    # plot updated comparison model against initial models
+    comparison_df.plot(kind='bar').tick_params(axis='x',rotation=45)
+    
+    
+    return comparison,models_df,leaves_df,estimators_df,best_results_df,comparison_df
 
 
 
