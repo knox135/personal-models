@@ -66,6 +66,39 @@ def scaled(x,xt):
     X_train_scaled, X_test
     return X_train_scaled,X_test
 
+def build_default_encoder(X_filled):
+    default_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
+
+    # Train the encoder
+    default_encoder.fit(X_filled['default'].values.reshape(-1, 1))
+    return {'column': 'default',
+            'multi_col_output': False,
+            'encoder': default_encoder}
+
+def build_housing_encoder(X_filled):
+    housing_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
+
+    # Train the encoder
+    housing_encoder.fit(X_filled['housing'].values.reshape(-1, 1))
+    return {'column': 'housing',
+            'multi_col_output': False,
+            'encoder': housing_encoder}
+
+def build_loan_encoder(X_filled):
+    loan_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
+
+    # Train the encoder
+    loan_encoder.fit(X_filled['loan'].values.reshape(-1, 1))
+    return {'column': 'loan',
+            'multi_col_output': False,
+            'encoder': loan_encoder}
+
+
+
+
+# run processed data through various models to determine which is best
+# 'format is: model = models.many_models(X_train, y_train, X_test, y_test)'
+
 # run processed data through various models to determine which is best
 def many_models(x,y,xt,yt):
     
@@ -183,7 +216,7 @@ def many_models(x,y,xt,yt):
     models = {'train_score': [], 'test_score': [], 'max_depth': []}
     
     # loop through range to see where deviation happens
-    for depth in range(2,12):
+    for depth in range(1,20):
         
         # save max depth to models
         models['max_depth'].append(depth)
@@ -203,13 +236,13 @@ def many_models(x,y,xt,yt):
         models['test_score'].append(balanced_accuracy_score(yt, y_test_pred))
         
     # save models data to dataframe and sort by test scores    
-    models_df = pd.DataFrame(models).sort_values(by='test_score',ascending=False)#.reset_index('max_depth')
+    models_df = pd.DataFrame(models)#.sort_values(by='test_score',ascending=False)#.reset_index('max_depth')
     
     # show graph of for loop
     models_df.plot(title='Random forest max depth', x='max_depth')
     
     #set max_depth as index
-    models_df = models_df.set_index('max_depth')
+    models_df = models_df.set_index('max_depth').sort_values(by='test_score',ascending=False)
     print(f'\nRandom Forest Parameter Tuning:\n \nbest depth: \n{models_df}')
     
     # save top 5 to a list
@@ -376,7 +409,7 @@ def many_models(x,y,xt,yt):
     ).set_index('Model Name')
     best_df['Balanced Difference'] = (best_df['Balanced Trained Score'] - best_df['Balanced Test Score'])
     best_df = best_df[['Trained Score','Test Score','Balanced Test Score','Balanced Difference']]
-    comparison_df = pd.concat([comparison,best_df])
+    comparison_df = pd.concat([comparison,best_df]).sort_values(by='Balanced Test Score',ascending=False)
     print(f'updated comparison DataFrame \n{comparison_df.head(8)}')
     
     # plot updated comparison model against initial models
@@ -384,32 +417,3 @@ def many_models(x,y,xt,yt):
     
     
     return comparison,models_df,leaves_df,estimators_df,best_results_df,comparison_df
-
-
-
-def build_default_encoder(X_filled):
-    default_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
-
-    # Train the encoder
-    default_encoder.fit(X_filled['default'].values.reshape(-1, 1))
-    return {'column': 'default',
-            'multi_col_output': False,
-            'encoder': default_encoder}
-
-def build_housing_encoder(X_filled):
-    housing_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
-
-    # Train the encoder
-    housing_encoder.fit(X_filled['housing'].values.reshape(-1, 1))
-    return {'column': 'housing',
-            'multi_col_output': False,
-            'encoder': housing_encoder}
-
-def build_loan_encoder(X_filled):
-    loan_encoder = OrdinalEncoder(categories=[['no', 'yes']], handle_unknown='use_encoded_value', unknown_value=-1)
-
-    # Train the encoder
-    loan_encoder.fit(X_filled['loan'].values.reshape(-1, 1))
-    return {'column': 'loan',
-            'multi_col_output': False,
-            'encoder': loan_encoder}
